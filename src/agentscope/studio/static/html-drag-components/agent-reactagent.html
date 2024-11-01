@@ -9,6 +9,18 @@
             <span>ReActAgent</span>
         </div>
         <button class="button copy-button" i18n="agent-reactagent-copy">Copy</button>
+        <div class="serivce-contain">
+            <button class="button add-button pop-drawer">Service</button>
+            <ul class="add-service-list">
+                <li data-node="BingSearchService">Bing Search</li>
+                <li data-node="GoogleSearchService">Google Search</li>
+                <li data-node="PythonService">Python Interpreter</li>
+                <li data-node="ReadTextService">Read Text</li>
+                <li data-node="WriteTextService">Write Text</li>
+                <li data-node="TextToAudioService">Text to Audio</li>
+                <li data-node="TextToImageService">Text to Image</li>
+            <ul>
+        </div>
         <span class="toggle-arrow">&#x25B2;</span>
     </div>
 
@@ -42,11 +54,15 @@
         <br>
 
         <label i18n="agent-reactagent-Tools">Tools</label>
-        <div class="tools-placeholder" data-required="true"
-            i18n="agent-reactagent-Tools-placeholder"
-            >Please drag and
-            drop a Tool module into this area. Inserting other types of modules
-            may result in errors.
+        <div class="tools-placeholder" data-required="true">
+            <span  i18n="agent-reactagent-Tools-placeholder">
+                Please drag and
+                drop a Tool module into this area. Inserting other types of modules
+                may result in errors.
+            </span>
+            <div class="dropzone" id="react-tools-dropzone">
+                <ul class="stacked-list"></ul>
+            </div>
         </div>
 
         <label i18n="agent-reactagent-iterations">Max reasoning-acting iterations</label>
