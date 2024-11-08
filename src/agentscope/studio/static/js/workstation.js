@@ -3335,11 +3335,14 @@ function setupNodeServiceDrawer(nodeId) {
 
 async function createServiceNode(nodeId,serivceName){
   const nodeElement = document.getElementById(`node-${nodeId}`);
-  const dropzoneRect = nodeElement.getBoundingClientRect();
+  const nodeElementRect = nodeElement.getBoundingClientRect();
   const node = editor.getNodeFromId(nodeId);
 
-  const createPos_x = Math.ceil(node.pos_x   + (dropzoneRect.width / 2) * ((2 - editor.zoom)));
-  const createPos_y = Math.ceil(node.pos_y   + (dropzoneRect.height / 2 ) * ((2 - editor.zoom)) + 100);
+
+  const dropzoneRect = nodeElement.querySelector(".tools-placeholder").getBoundingClientRect();
+
+  const createPos_x = Math.ceil(node.pos_x   + (dropzoneRect.width * 2 / 3 )  / (editor.zoom));
+  const createPos_y = Math.ceil(node.pos_y   + (dropzoneRect.top -  nodeElementRect.top ) / editor.zoom + 20);
 
   const dropNodeInfo = editor.getNodeFromId(nodeId);
   const dropNodeInfoData = dropNodeInfo.data;
