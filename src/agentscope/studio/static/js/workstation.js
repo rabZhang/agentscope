@@ -1178,7 +1178,7 @@ function processNodeCopyHTML(htmlString) {
   const parser = new DOMParser();
   const doc = parser.parseFromString(htmlString, "text/html");
 
-  [".copy-button", "div .node-id", ".serivce-contain"].forEach(selector => {
+  [".copy-button", "div .node-id"].forEach(selector => {
     const element = doc.querySelector(selector);
     if (element) {
       element.remove();
@@ -1288,6 +1288,10 @@ function setupNodeListeners(nodeId) {
 
     if (toggleArrow && contentBox && titleBox) {
       toggleArrow.addEventListener("click", function () {
+        const serivceArr = ["BingSearchService", "GoogleSearchService", "PythonService", "ReadTextService", "WriteTextService", "TextToAudioService", "AudioToTextService"];
+        if(serivceArr.includes(newNode.querySelector(".title-box").getAttribute("data-class"))){
+          return;
+        }
         contentBox.classList.toggle("hidden");
 
         if (contentBox.classList.contains("hidden")) {
@@ -3307,9 +3311,8 @@ function setupNodeServiceDrawer(nodeId) {
   const popDrawer = newNode.querySelector(".pop-drawer");
   if (popDrawer) {
     const contain = newNode.querySelector(".serivce-contain");
-    const popDrawer = newNode.querySelector(".pop-drawer");
     const hiddenList = newNode.querySelector(".add-service-list");
-    popDrawer.addEventListener("mouseover", function() {
+    contain.addEventListener("mouseover", function() {
       hiddenList.style.display = "block";
     });
     hiddenList.addEventListener("mouseover", function() {
@@ -3321,22 +3324,30 @@ function setupNodeServiceDrawer(nodeId) {
 
     hiddenList.addEventListener("click", function(e) {
       const target = e.target;
+
       if(target.localName == "li"){
-        createServiceNode(nodeId,target.getAttribute("data-node"),newNode,e.currentTarget.offsetLeft + newNode.offsetWidth  ,e.currentTarget.offsetTop);
+        // createServiceNode(nodeId,target.getAttribute("data-node"),newNode,e.currentTarget.offsetLeft + newNode.offsetWidth  ,e.currentTarget.offsetTop);
+        createServiceNode(nodeId,target.getAttribute("data-node"));
       }
     });
   }
 }
 
-async function createServiceNode(nodeId,serivceName,currentNode,pos_x,pos_y){
+async function createServiceNode(nodeId,serivceName){
+  const nodeElement = document.getElementById(`node-${nodeId}`);
+  const dropzoneRect = nodeElement.getBoundingClientRect();
+  const node = editor.getNodeFromId(nodeId);
+
+  const createPos_x = Math.ceil(node.pos_x   + (dropzoneRect.width / 2) * ((2 - editor.zoom)));
+  const createPos_y = Math.ceil(node.pos_y   + (dropzoneRect.height / 2 ) * ((2 - editor.zoom)) + 100);
+
   const dropNodeInfo = editor.getNodeFromId(nodeId);
   const dropNodeInfoData = dropNodeInfo.data;
-  const createdId = await selectReActAgent(serivceName,pos_x,pos_y);
+  const createdId = await selectReActAgent(serivceName,createPos_x,createPos_y);
   dropNodeInfoData.elements.push(`${createdId}`);
   editor.updateNodeDataFromId(nodeId, dropNodeInfoData);
 
   dropzoneDetection(createdId);
-  dropNodeToDropzone(createdId,currentNode);
 }
 
 async function selectReActAgent(serivceName,pos_x,pos_y) {
@@ -3551,6 +3562,8 @@ function dropNodeToDropzone(nodeId, dropzoneElement) {
   console.log(
     `Node ${nodeId} (${node.name}) added to the stackedItems in the dropzone ${dropzoneNodeId}`
   );
+  stackedItem
+    .querySelector(".expand-btn").click();
 }
 
 function handleStackedItemMouseDown(e) {
@@ -3642,12 +3655,13 @@ function expandNodeFromDropzone(node, dropzoneNode, stackedItem) {
   // Unhide the node and set its position
   nodeElement.classList.remove("hidden-node");
   nodeElement.style.position = "absolute";
-
+  nodeElement.style.cursor = "unset";
   // Position the node next to the dropzone
   const dropzoneRect = dropzoneElement.getBoundingClientRect();
   const stackedItemRect = stackedItem.getBoundingClientRect();
   const expandedLeft = dropzoneRect.right + 20;
   const expandedTop = stackedItemRect.top;
+
   node.data.pos_x = expandedLeft;
   node.data.pos_y = expandedTop;
 
@@ -3671,7 +3685,7 @@ function expandNodeFromDropzone(node, dropzoneNode, stackedItem) {
     tailStyle = `
             border-top: ${tailSize}px solid transparent;
             border-bottom: ${tailSize}px solid transparent;
-            border-right: ${tailSize}px solid #4CAF50;
+            border-right: ${tailSize}px solid transparent;
         `;
   } else {
     // Tail should be on the bottom-left corner
@@ -3680,7 +3694,7 @@ function expandNodeFromDropzone(node, dropzoneNode, stackedItem) {
     tailStyle = `
             border-top: ${tailSize}px solid transparent;
             border-bottom: ${tailSize}px solid transparent;
-            border-right: ${tailSize}px solid #4CAF50;
+            border-right: ${tailSize}px solid transparent;
         `;
   }
 
@@ -3729,6 +3743,9 @@ function expandNodeFromDropzone(node, dropzoneNode, stackedItem) {
     }
   }
 
+  nodeElement.querySelector(".toggle-arrow").addEventListener("click",(e) => {
+    collapseNode();
+  });
   // Add event listener for outside clicks
   setTimeout(() => {
     document.addEventListener("click", handleOutsideClick);

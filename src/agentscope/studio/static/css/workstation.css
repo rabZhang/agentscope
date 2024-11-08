@@ -604,27 +604,16 @@ pre[class*='language-'] {
   color: #888;
 }
 
-.pop-drawer-box{
-  display: flex;
-  align-items: center;
-  position: absolute;
-  top: 0;
-  background: #fff;
-  height: fit-content;
-  border-radius: 4px;
-  border: 1px solid var(--border-color);
-  color: #000;
-  z-index: -1;
-  padding: 15px;
-  cursor: auto;
-  overflow-y: scroll;
-  box-shadow: 0 2px 10px 2px var(--border-color);
-}
 
-.drawflow .drawflow-node.selected  .pop-drawer-box{
+.drawflow .drawflow-node.selected {
   background: var(--main-color-very-light);
   border: 1px solid var(--main-color-light);
   box-shadow: 0 2px 10px 2px var(--main-color-light);
+}
+
+.tool-box{
+  display: flex;
+  gap: 10px;
 }
 
 .add-service-list{
@@ -637,7 +626,6 @@ pre[class*='language-'] {
   min-width: 160px;
   box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
   z-index: 1;
-  transform: translateY(-5px);
   border-radius: 5%;
   overflow: hidden;
 }
@@ -654,7 +642,6 @@ pre[class*='language-'] {
 }
 
 .dropzone {
-  height: 200px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
