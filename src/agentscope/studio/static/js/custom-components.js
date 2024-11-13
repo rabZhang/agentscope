@@ -406,3 +406,67 @@ class KVPairs extends HTMLElement {
 }
 
 customElements.define("kv-pair", KVPairs);
+
+class InfoBubble extends HTMLElement {
+  constructor() {
+    super();
+    const shadow = this.attachShadow({ mode: "open" });
+    const url = this.getAttribute("url");
+    const template = `
+            <style>
+                .inner {
+                    border-radius: 10px;
+                    clip-path: circle(5% at 4% 12px);
+                    transition: .5s cubic-bezier(0, 1, 0.6, 1);
+                    position: absolute;
+                    background-color: gray;
+                    margin: 4px 0 0 4px;
+                }
+                .inner span {
+                    float: left;
+                    font-weight: 500;
+                    font-size: 16px;
+                    margin-left: 2%;
+                    opacity: 1;
+                    color: #fff;
+                    transition: opacity 1s;
+                }
+                .inner p {
+                    font-size: 0.8em;
+                    visibility: hidden;
+                    transition: .5s cubic-bezier(0, 1.44, 0.51, 1.33);
+                    margin:10px;
+                }
+                .inner:hover {
+                    clip-path: circle(75%);
+                    background-color: #A0D9C4;
+                    color: #000;
+                }
+                .inner:hover p {
+                    visibility: visible;
+                }
+                .inner:hover span {
+                    opacity: 0;
+                    transition-duration: 0s;
+                }
+                .inner a {
+                  color: blue;
+                  cursor: pointer;
+                }
+            </style>
+        `;
+    const textblade = getCookie("locale") == "zh" ? `
+      <div class="inner">
+        <span>?</span>
+        <p>访问 <a href=${url} target="_blank">${url}</a> 获取API Key并开通相应模型/服务。</p>
+      </div>`
+      :
+      ` <div class="inner">
+          <span>?</span>
+          <p>Visit <a href=${url} target="_blank">${url}</a> to get an API key and activate the corresponding model/service.</p>
+        </div>`;
+    shadow.innerHTML = template + textblade;
+  }
+}
+
+customElements.define("info-bubble", InfoBubble);
