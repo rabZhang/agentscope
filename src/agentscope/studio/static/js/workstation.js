@@ -2065,16 +2065,25 @@ function showExportHTMLPopup() {
 
 
 function showContributePopup(userLogin) {
-  // if (userLogin.startsWith("guest_") || userLogin === "local_user") {
-  //   swal.fire("Error", "You need to be logged into GitHub to contribute.", "error");
-  //   return;
-  // }
+  if (userLogin.startsWith("guest_") || userLogin === "local_user") {
+    Swal.fire(
+      "Error",
+      "You need to be logged into GitHub via agentscope.io to contribute. Please log in and try again.",
+      "error"
+    );
+    return;
+  }
 
   swal.fire({
     title: "Contribute Your Workflow to AgentScope",
-    text: `You're about to create a new branch and submit a Pull Request (PR) to add your workflow to the AgentScope Gallery.
-              This allows you to share your workflow with the community, helping others build and learn.
-              Please ensure that any API keys or sensitive information are not included in your submission.`,
+    text: `You are about to perform the following actions:
+            1. Create a new branch in your forked repository.
+            2. Add your workflow file to this branch.
+            3. Create a Pull Request (PR) from your branch to the AgentScope Gallery.
+
+            These operations will allow you to share your workflow with the community on AgentScope.
+            Please ensure that any API keys or sensitive information are not included in your submission.
+            By proceeding, you grant permission for these actions to be executed.`,
     icon: "info",
     showCancelButton: true,
     confirmButtonText: "Yes, I'd like to contribute!",
