@@ -8,6 +8,7 @@ Functions:
         authentication.
 """
 import json
+import base64
 from datetime import datetime, timedelta
 from functools import wraps
 from typing import Any, Callable, Dict, Optional
@@ -16,7 +17,6 @@ import jwt
 import requests
 from flask import session, redirect, url_for, abort
 from agentscope.constants import TOKEN_EXP_TIME
-from agentscope.studio._app_online import OWNER, REPO
 
 
 def _require_auth(
@@ -160,11 +160,15 @@ def get_user_status(access_token: str) -> Any:
     return None
 
 
-def star_repository(access_token: str) -> int:
+def star_repository(
+    access_token: str,
+    owner: str,
+    repo: str,
+) -> int:
     """
     Star the Repo.
     """
-    url = f"https://api.github.com/user/starred/{OWNER}/{REPO}"
+    url = f"https://api.github.com/user/starred/{owner}/{repo}"
     headers = get_github_headers(access_token)
     response = requests.put(url, headers=headers)
     return response.status_code == 204
@@ -202,11 +206,11 @@ def upload_file(
     """
     headers = get_github_headers(access_token)
     url = f"https://api.github.com/repos/{owner}/{repo}/contents/{file_path}"
+    encoded_content = base64.b64encode(content.encode("utf-8")).decode("utf-8")
+
     data = {
         "message": commit_message,
-        "content": content.encode("utf-8").decode(
-            "ascii",
-        ),  # Ensure base64 encoding
+        "content": encoded_content,
         "branch": branch,
     }
     response = requests.put(url, headers=headers, data=json.dumps(data))
@@ -222,6 +226,7 @@ def open_pull_request(
     title: str,
     head_branch: str,
     base_branch: str = "main",
+    body_content: str = "",
 ) -> Optional[Dict[str, Any]]:
     """
     Open a pull request
@@ -232,7 +237,9 @@ def open_pull_request(
         "title": title,
         "head": head_branch,
         "base": base_branch,
-        "body": "This is an automated pull request.",
+        "body": f"This is an automated pull request.\n\n"
+        f"Workflow description:\n"
+        f"{body_content}\n\n[skip ci]",
     }
     response = requests.post(url, headers=headers, json=data)
     if response.status_code == 201:

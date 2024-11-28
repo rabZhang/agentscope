@@ -234,7 +234,7 @@ def oauth_callback() -> str:
 
     user_login = user_status.get("login")
 
-    if star_repository(access_token=access_token):
+    if star_repository(access_token=access_token, owner=OWNER, repo=REPO):
         verification_token = generate_verification_token()
         # Used for compare with `verification_token` in `jwt_token`
         session["verification_token"] = verification_token
@@ -423,12 +423,6 @@ def create_gallery_pr(**kwargs: Any) -> Response:
             return jsonify({"message": "Failed to fork repository."}), 500
 
         # Create a new branch with a unique name
-        branch_name = (
-            f"gallery/{datetime.now().strftime('%Y%m%d')}"
-            f"_{meta_info['title']}_{user_login}"
-        )
-        branch_name = branch_name.replace(" ", "_")
-
         new_branch = create_branch_with_timestamp(
             access_token,
             OWNER,
@@ -456,12 +450,12 @@ def create_gallery_pr(**kwargs: Any) -> Response:
             new_branch,
             file_path,
             encoded_content,
-            f"Add gallery data for {meta_info['title']}",
+            f"Add gallery data for {meta_info['title']} [skip ci]",
         ):
             return jsonify({"message": "Failed to write file."}), 500
 
         # Create a pull request
-        pr_title = f"Add gallery: {meta_info['title']}"
+        pr_title = f"[Gallery] Contribute Workflow:  {meta_info['title']}"
         pr_response = open_pull_request(
             access_token,
             OWNER,
@@ -469,6 +463,7 @@ def create_gallery_pr(**kwargs: Any) -> Response:
             pr_title,
             f"{user_login}:{new_branch}",
             "main",
+            body_content=meta_info.get("description"),
         )
         if not pr_response:
             return jsonify({"message": "Failed to create pull request."}), 500
