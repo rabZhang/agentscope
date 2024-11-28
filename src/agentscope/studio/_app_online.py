@@ -401,6 +401,25 @@ def _load_workflow_online(**kwargs: Any) -> Response:
     return _load_workflow()
 
 
+@_app.route("/create-gallery-pr", methods=["POST"])
+@_require_auth(fail_with_exception=True, secret_key=SECRET_KEY)
+def create_gallery_pr(**kwargs: Any) -> Response:
+    # pylint: disable=unused-argument
+    """
+    Create a workflow PR for gallery.
+    """
+    try:
+        meta_info = request.json.get("meta")
+        data = request.json.get("data")
+        print("Received data:", data)
+        print("Received meta:", meta_info)
+
+        return jsonify({"message": "PR created successfully!"}), 200
+    except Exception as e:
+        print("Error:", e)
+        return jsonify({"message": "Failed to create PR."}), 500
+
+
 @_app.route("/set_locale")
 def set_locale() -> Response:
     """

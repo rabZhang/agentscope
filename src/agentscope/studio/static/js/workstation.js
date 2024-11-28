@@ -654,8 +654,7 @@ async function addNodeToDrawFlow(name, pos_x, pos_y) {
     const CopyNodeID = editor.addNode("CopyNode", 1, 1,
       pos_x,
       pos_y,
-      "CopyNode", {
-      }, htmlSourceCode);
+      "CopyNode", {}, htmlSourceCode);
     var nodeElement = document.querySelector(`#node-${CopyNodeID} .node-id`);
     if (nodeElement) {
       nodeElement.textContent = nodeElement;
@@ -1241,7 +1240,7 @@ function setupNodeListeners(nodeId) {
     if (toggleArrow && contentBox && titleBox) {
       toggleArrow.addEventListener("click", function () {
         const serivceArr = ["BingSearchService", "GoogleSearchService", "PythonService", "ReadTextService", "WriteTextService", "TextToAudioService", "AudioToTextService"];
-        if(serivceArr.includes(newNode.querySelector(".title-box").getAttribute("data-class"))){
+        if (serivceArr.includes(newNode.querySelector(".title-box").getAttribute("data-class"))) {
           return;
         }
         contentBox.classList.toggle("hidden");
@@ -1271,7 +1270,7 @@ function setupNodeListeners(nodeId) {
 
       function doDragSE(e) {
         newNode.style.width = "auto";
-        newNode.style.height= "auto";
+        newNode.style.height = "auto";
 
         const newWidth = (startWidth + e.clientX - startX);
         if (newWidth > 200) {
@@ -1527,7 +1526,7 @@ function sortElementsByPosition(inputData) {
   Object.keys(inputData.drawflow).forEach((moduleKey) => {
     const moduleData = inputData.drawflow[moduleKey];
     Object.entries(moduleData.data).forEach(([nodeId, node]) => {
-      if (node.class === "GROUP" && node.name !=="ReActAgent") {
+      if (node.class === "GROUP" && node.name !== "ReActAgent") {
         const elements = node.data.elements;
         const elementsWithPosition = elements.map(elementId => {
           const elementNode = document.querySelector(`#node-${elementId}`);
@@ -2065,10 +2064,100 @@ function showExportHTMLPopup() {
 }
 
 
-function showContributePopup() {
-  alert("Contribute to GitHub function triggered!");
-}
+function showContributePopup(userLogin) {
+  if (userLogin.startsWith("guest_") || userLogin === "local_user") {
+    swal.fire("Error", "You need to be logged into GitHub to contribute.", "error");
+    return;
+  }
 
+  swal.fire({
+    title: "Contribute Your Workflow to AgentScope",
+    text: `You're about to create a new branch and submit a Pull Request (PR) to add your workflow to the AgentScope Gallery.
+              This allows you to share your workflow with the community, helping others build and learn.
+              Please ensure that any API keys or sensitive information are not included in your submission.`,
+    icon: "info",
+    showCancelButton: true,
+    confirmButtonText: "Yes, I'd like to contribute!",
+    cancelButtonText: "No, maybe later"
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      const {value: formValues} = await Swal.fire({
+        title: "Fill the Form to Create PR",
+        html: `
+              <div style="text-align: left;">
+                <label for="swal-input1">Title:</label>
+                <input id="swal-input1" class="swal2-input" placeholder="Enter a descriptive title" value="${userLogin}'s workflow">
+
+                <label for="swal-input4">Thumbnail URL (Optional):</label>
+                <input id="swal-input4" class="swal2-input" placeholder="Enter a URL for the thumbnail">
+
+                <label>Category:</label>
+                <div id="category-buttons">
+                  <button type="button" class="category-button" data-value="tool">Tool</button>
+                  <button type="button" class="category-button" data-value="game">Game</button>
+                  <button type="button" class="category-button" data-value="simulation">Simulation</button>
+                  <button type="button" class="category-button" data-value="robotics">Robotics</button>
+                  <button type="button" class="category-button" data-value="social">Social</button>
+                  <button type="button" class="category-button" data-value="economic">Economic</button>
+                  <button type="button" class="category-button" data-value="educational">Educational</button>
+                  <button type="button" class="category-button" data-value="healthcare">Healthcare</button>
+                  <button type="button" class="category-button" data-value="security">Security</button>
+                  <button type="button" class="category-button" data-value="entertainment">Entertainment</button>
+                  <button type="button" class="category-button" data-value="manufacturing">Manufacturing</button>
+                  <button type="button" class="category-button" data-value="communication">Communication</button>
+                  <button type="button" class="category-button" data-value="logistics">Logistics</button>
+                  <button type="button" class="category-button" data-value="others">Others</button>
+                </div>
+
+                </div>
+            `,
+        focusConfirm: false,
+        preConfirm: () => {
+          const selectedCategories = Array.from(document.querySelectorAll(".category-button.selected"))
+            .map(button => button.getAttribute("data-value"));
+          return {
+            title: document.getElementById("swal-input1").value,
+            author: userLogin,
+            category: selectedCategories,
+            thumbnail: document.getElementById("swal-input4").value
+          };
+        },
+        didOpen: () => {
+          const buttons = document.querySelectorAll(".category-button");
+          buttons.forEach(button => {
+            button.addEventListener("click", () => {
+              button.classList.toggle("selected");
+            });
+          });
+        }
+      });
+
+      if (formValues) {
+        try {
+          const response = await fetch("/create-gallery-pr", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              data: JSON.stringify(formValues, null, 4),
+            })
+          });
+
+          if (response.ok) {
+            swal.fire("Success",
+              "Thank you! Your workflow has been submitted to the gallery. It will be reviewed by our maintainers and, once approved, you'll be recognized as an AgentScope developer on our homepage!",
+              "success");
+          } else {
+            swal.fire("Error", "There was an error while submitting your workflow. Please try again later.", "error");
+          }
+        } catch (error) {
+          swal.fire("Error", "There was an error while submitting your workflow. Please try again later.", "error");
+        }
+      }
+    }
+  });
+}
 
 function isValidDataStructure(data) {
   if (
@@ -2146,7 +2235,8 @@ function showImportHTMLPopup() {
                 setTimeout(() => {
                   updateImportNodes();
                 }, 200);
-              });;
+              });
+            ;
           });
 
       } catch (error) {
@@ -2423,9 +2513,10 @@ function updateImportNodes() {
     editor.updateConnectionNodes(`node-${nodeId}`);
   });
 }
+
 function importSetupNodes(dataToImport) {
   imporTempData = dataToImport;
-  Object.entries(dataToImport.drawflow.Home.data).forEach(([nodeId,nodeValue]) => {
+  Object.entries(dataToImport.drawflow.Home.data).forEach(([nodeId, nodeValue]) => {
     disableButtons();
     makeNodeTop(nodeId);
     setupNodeCopyListens(nodeId);
@@ -2456,9 +2547,9 @@ function importSetupNodes(dataToImport) {
         setupNodeCopyListens(nodeId);
       }
     }
-    if(nodeValue.name === "ReActAgent"){
+    if (nodeValue.name === "ReActAgent") {
       nodeValue.data.elements.forEach((listNode) => {
-        dropNodeToDropzone(listNode,nodeElement);
+        dropNodeToDropzone(listNode, nodeElement);
       });
     }
   });
@@ -3072,6 +3163,7 @@ function showEditorTab() {
   document.getElementById("col-right2").style.display = "none";
   console.log("Show Editor");
 }
+
 function importGalleryWorkflow(data) {
   try {
     const parsedData = JSON.parse(data);
@@ -3349,28 +3441,28 @@ function setupNodeServiceDrawer(nodeId) {
   if (popDrawer) {
     const contain = newNode.querySelector(".serivce-contain");
     const hiddenList = newNode.querySelector(".add-service-list");
-    contain.addEventListener("mouseover", function() {
+    contain.addEventListener("mouseover", function () {
       hiddenList.style.display = "block";
     });
-    hiddenList.addEventListener("mouseover", function() {
+    hiddenList.addEventListener("mouseover", function () {
       hiddenList.style.display = "block";
     });
-    contain.addEventListener("mouseout", function() {
+    contain.addEventListener("mouseout", function () {
       hiddenList.style.display = "none";
     });
 
-    hiddenList.addEventListener("click", function(e) {
+    hiddenList.addEventListener("click", function (e) {
       const target = e.target;
 
-      if(target.localName == "li"){
+      if (target.localName == "li") {
         // createServiceNode(nodeId,target.getAttribute("data-node"),newNode,e.currentTarget.offsetLeft + newNode.offsetWidth  ,e.currentTarget.offsetTop);
-        createServiceNode(nodeId,target.getAttribute("data-node"));
+        createServiceNode(nodeId, target.getAttribute("data-node"));
       }
     });
   }
 }
 
-async function createServiceNode(nodeId,serivceName){
+async function createServiceNode(nodeId, serivceName) {
   const nodeElement = document.getElementById(`node-${nodeId}`);
   const nodeElementRect = nodeElement.getBoundingClientRect();
   const node = editor.getNodeFromId(nodeId);
@@ -3378,19 +3470,19 @@ async function createServiceNode(nodeId,serivceName){
 
   const dropzoneRect = nodeElement.querySelector(".tools-placeholder").getBoundingClientRect();
 
-  const createPos_x = Math.ceil(node.pos_x   + (dropzoneRect.width * 2 / 3 )  / (editor.zoom));
-  const createPos_y = Math.ceil(node.pos_y   + (dropzoneRect.top -  nodeElementRect.top ) / editor.zoom + 20);
+  const createPos_x = Math.ceil(node.pos_x + (dropzoneRect.width * 2 / 3) / (editor.zoom));
+  const createPos_y = Math.ceil(node.pos_y + (dropzoneRect.top - nodeElementRect.top) / editor.zoom + 20);
 
   const dropNodeInfo = editor.getNodeFromId(nodeId);
   const dropNodeInfoData = dropNodeInfo.data;
-  const createdId = await selectReActAgent(serivceName,createPos_x,createPos_y);
+  const createdId = await selectReActAgent(serivceName, createPos_x, createPos_y);
   dropNodeInfoData.elements.push(`${createdId}`);
   editor.updateNodeDataFromId(nodeId, dropNodeInfoData);
 
   dropzoneDetection(createdId);
 }
 
-async function selectReActAgent(serivceName,pos_x,pos_y) {
+async function selectReActAgent(serivceName, pos_x, pos_y) {
   const htmlSourceCode = await fetchHtmlSourceCodeByName(serivceName);
   let createId;
   switch (serivceName) {
@@ -3478,8 +3570,8 @@ function dropzoneDetection(nodeId) {
     if (!nodeElement.contains(dropzone)) {
       if (
         isColliding(nodeElement, dropzone) &&
-        node.name !== "dropzoneNode" &&
-        !node.data.attachedToDropzone
+                node.name !== "dropzoneNode" &&
+                !node.data.attachedToDropzone
       ) {
         console.log(
           `Collision detected: Node "${node.name}" (ID: ${nodeId}) collided with ${dropzone.id}`
@@ -3496,9 +3588,9 @@ function isColliding(element1, element2) {
 
   return !(
     rect1.right < rect2.left ||
-    rect1.left > rect2.right ||
-    rect1.bottom < rect2.top ||
-    rect1.top > rect2.bottom
+        rect1.left > rect2.right ||
+        rect1.bottom < rect2.top ||
+        rect1.top > rect2.bottom
   );
 }
 
@@ -3627,7 +3719,7 @@ function handleStackedItemDrag(e) {
   const originalNode = document.getElementById(`node-${nodeId}`);
   if (
     dropzone &&
-    !dropzone.contains(document.elementFromPoint(e.clientX, e.clientY))
+        !dropzone.contains(document.elementFromPoint(e.clientX, e.clientY))
   ) {
     console.log("Item dragged outside the dropzone");
     // display forbidden cursor
@@ -3717,7 +3809,7 @@ function expandNodeFromDropzone(node, dropzoneNode, stackedItem) {
 
   if (
     stackedItemRect.top + stackedItemRect.height / 2 <
-    expandedRect.top + expandedRect.height / 2
+        expandedRect.top + expandedRect.height / 2
   ) {
     // Tail should be on the top-left corner
     tailLeft = -tailSize;
@@ -3752,8 +3844,8 @@ function expandNodeFromDropzone(node, dropzoneNode, stackedItem) {
   nodeElement.onmousedown = function (e) {
     if (
       e.target.tagName === "INPUT" ||
-      e.target.tagName === "SELECT" ||
-      e.target.tagName === "BUTTON"
+            e.target.tagName === "SELECT" ||
+            e.target.tagName === "BUTTON"
     ) {
       return;
     }
@@ -3783,7 +3875,7 @@ function expandNodeFromDropzone(node, dropzoneNode, stackedItem) {
     }
   }
 
-  nodeElement.querySelector(".toggle-arrow").addEventListener("click",(e) => {
+  nodeElement.querySelector(".toggle-arrow").addEventListener("click", (e) => {
     collapseNode();
   });
   // Add event listener for outside clicks
