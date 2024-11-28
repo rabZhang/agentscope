@@ -2065,6 +2065,10 @@ function showExportHTMLPopup() {
 }
 
 
+function showContributePopup() {
+  alert("Contribute to GitHub function triggered!");
+}
+
 
 function isValidDataStructure(data) {
   if (
