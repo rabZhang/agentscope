@@ -8,7 +8,7 @@ import time
 import secrets
 import tempfile
 from typing import Tuple, Any
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 import requests
 import oss2
@@ -411,8 +411,25 @@ def create_gallery_pr(**kwargs: Any) -> Response:
     try:
         meta_info = request.json.get("meta")
         data = request.json.get("data")
-        print("Received data:", data)
-        print("Received meta:", meta_info)
+
+        assert meta_info.get("author") == session.get("user_login")
+
+        meta_info = {
+            "index": -1,
+            "title": meta_info.get("title"),
+            "author": session.get("user_login"),
+            "description": meta_info.get("description"),
+            "category": meta_info.get("category"),
+            "time": datetime.now().strftime("%Y-%m-%d"),
+            "thumbnail": meta_info.get("thumbnail", ""),
+        }
+
+        gallery_data = {
+            "meta": meta_info,
+            "drawflow": data,
+        }
+
+        print(gallery_data)
 
         return jsonify({"message": "PR created successfully!"}), 200
     except Exception as e:

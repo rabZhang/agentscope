@@ -3,13 +3,10 @@
     "index": 0,
     "title": "Adventure of Monkey",
     "author": "AgentScopeTeam",
-    "keywords": [
-      "game",
-      "multi-modal"
-    ],
     "category": "game",
     "time": "2024-08-20",
-    "thumbnail": ""
+    "thumbnail": "",
+    "description": "Multi-modal game"
   },
   "drawflow": {
     "Home": {

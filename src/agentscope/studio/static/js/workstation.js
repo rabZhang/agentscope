@@ -2065,10 +2065,10 @@ function showExportHTMLPopup() {
 
 
 function showContributePopup(userLogin) {
-  if (userLogin.startsWith("guest_") || userLogin === "local_user") {
-    swal.fire("Error", "You need to be logged into GitHub to contribute.", "error");
-    return;
-  }
+  // if (userLogin.startsWith("guest_") || userLogin === "local_user") {
+  //   swal.fire("Error", "You need to be logged into GitHub to contribute.", "error");
+  //   return;
+  // }
 
   swal.fire({
     title: "Contribute Your Workflow to AgentScope",
@@ -2088,8 +2088,11 @@ function showContributePopup(userLogin) {
                 <label for="swal-input1">Title:</label>
                 <input id="swal-input1" class="swal2-input" placeholder="Enter a descriptive title" value="${userLogin}'s workflow">
 
-                <label for="swal-input4">Thumbnail URL (Optional):</label>
-                <input id="swal-input4" class="swal2-input" placeholder="Enter a URL for the thumbnail">
+                <label for="swal-input2">Description:</label>
+                <input id="swal-input2" class="swal2-input">
+
+                <label for="swal-input3">Thumbnail URL (Optional):</label>
+                <input id="swal-input3" class="swal2-input" placeholder="Enter a URL for the thumbnail">
 
                 <label>Category:</label>
                 <div id="category-buttons">
@@ -2112,14 +2115,16 @@ function showContributePopup(userLogin) {
                 </div>
             `,
         focusConfirm: false,
+        showCancelButton: true,
         preConfirm: () => {
           const selectedCategories = Array.from(document.querySelectorAll(".category-button.selected"))
             .map(button => button.getAttribute("data-value"));
           return {
             title: document.getElementById("swal-input1").value,
             author: userLogin,
+            description: document.getElementById("swal-input2").value,
             category: selectedCategories,
-            thumbnail: document.getElementById("swal-input4").value
+            thumbnail: document.getElementById("swal-input3").value
           };
         },
         didOpen: () => {
@@ -2134,13 +2139,22 @@ function showContributePopup(userLogin) {
 
       if (formValues) {
         try {
+          const rawData = editor.export();
+          const hasError = sortElementsByPosition(rawData);
+          if (hasError) {
+            return;
+          }
+          const filteredData = reorganizeAndFilterConfigForAgentScope(rawData);
+          filterOutApiKey(filteredData);
+
           const response = await fetch("/create-gallery-pr", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              data: JSON.stringify(formValues, null, 4),
+              meta: formValues,
+              data: JSON.stringify(filteredData, null, 4),
             })
           });
 
